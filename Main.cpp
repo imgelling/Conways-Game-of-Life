@@ -1,4 +1,4 @@
-#define GAME_USE_DEDICATED_GPU
+
 #define GAME_SUPPORT_OPENGL
 
 #include "Game.h"

@@ -174,31 +174,45 @@ public:
 	void Update(const float_t msElapsed)
 	{
 		// Handle Input
+
+		// Fullscreen
 		if (geKeyboard.WasKeyReleased(geK_F11))
 		{
 			geToggleFullscreen();
 		}
+
+		// Quit
 		if (geKeyboard.WasKeyReleased(geK_ESCAPE))
 		{
 			geStopEngine();
 		}
+
+		// Start/Stop simulation
 		if (geKeyboard.WasKeyReleased(geK_SPACE))
 		{
 			running = !running;
 		}
+
+		// Reduce tick time
 		if (geKeyboard.WasKeyReleased(geK_COMMA))
 		{
 			tickSpeed -= 10.0f;
 			if (tickSpeed < 0) tickSpeed = 0;
 		}	
+
+		// Increase tick time
 		if (geKeyboard.WasKeyReleased(geK_PERIOD))
 		{
 			tickSpeed += 10.0f;
 		}
+
+		// Hide onscreen text
 		if (geKeyboard.WasKeyReleased(geK_F1))
 		{
 			hideText = !hideText;
 		}
+
+		// Clear the world
 		if (geKeyboard.WasKeyReleased(geK_C))
 		{
 			ClearWorld();

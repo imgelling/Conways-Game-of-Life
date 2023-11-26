@@ -20,6 +20,7 @@ public:
 	bool* newWorld;
 	bool* oldWorld;
 	bool running;
+	bool hideText;
 	float_t tickSpeed;
 
 	Game() : game::Engine()
@@ -28,6 +29,7 @@ public:
 		oldWorld = nullptr;
 		running = false;
 		tickSpeed = 100.0f;
+		hideText = false;
 	}
 
 	void Initialize()
@@ -44,12 +46,15 @@ public:
 
 	void LoadContent()
 	{
-		// Setup renderer(s)
-		Setup();
-
 		newWorld = new bool[(size_t)worldSize.width * (size_t)worldSize.height];
 		oldWorld = new bool[(size_t)worldSize.width * (size_t)worldSize.height];
 		ClearWorld();
+
+		// Needed by spritebatch
+		// will move to spriteBatch begin and restore what
+		// was there in end.
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_BLEND);
 
 		// Setup pixel mode
 		if (!pixelMode.Initialize(worldSize))
@@ -69,15 +74,14 @@ public:
 			geLogLastError();
 		}
 
-		geMouse.UseMouseAcceleration(false);
-
+		// Simulate 1 tick to get something on the screen
 		Tick();
 	}
 
 	void Shutdown()
 	{
-		delete newWorld;
-		delete oldWorld;
+		delete [] newWorld;
+		delete [] oldWorld;
 	}
 
 	bool CheckCell(const uint32_t x, const uint32_t y) const
@@ -114,20 +118,15 @@ public:
 
 	void ClearWorld()
 	{
-		for (uint32_t y = 0; y < (uint32_t)worldSize.height; y++)
-		{
-			for (uint32_t x = 0; x < (uint32_t)worldSize.width; x++)
-			{
-				newWorld[y * worldSize.width + x] = false;
-				oldWorld[y * worldSize.width + x] = false;
-			}
-		}
+		ZeroMemory(newWorld, worldSize.width * worldSize.height);
+		ZeroMemory(oldWorld, worldSize.width * worldSize.height);
 	}
 
 	void Tick()
 	{
 		uint32_t liveNeighbors = 0;
 		uint32_t currentPosition = 0;
+
 		for (uint32_t y = 0; y < (uint32_t)worldSize.height; y++)
 		{
 			for (uint32_t x = 0; x < (uint32_t)worldSize.width; x++)
@@ -196,6 +195,15 @@ public:
 		{
 			tickSpeed += 10.0f;
 		}
+		if (geKeyboard.WasKeyReleased(geK_F1))
+		{
+			hideText = !hideText;
+		}
+		if (geKeyboard.WasKeyReleased(geK_C))
+		{
+			ClearWorld();
+			Tick();
+		}
 	}
 
 	void Render(const float_t msElapsed)
@@ -206,22 +214,27 @@ public:
 		// Clears and starts new scene
 		geClear(GAME_FRAME_BUFFER_BIT | GAME_DEPTH_STENCIL_BUFFER_BIT, game::Colors::DarkGray);
 
+		// If simulation is running, check to see if it is
+		// time for a Tick.
 		if (running)
 		{
 			time += msElapsed;
 			if (time >= tickSpeed)
 			{
 				Tick();
-				time -= tickSpeed;
+				time = 0;
 			}
 		}
 		
+
+		// Add life to the world
 		if (geMouse.IsButtonHeld(geMOUSE_LEFT))
 		{
 			oldWorld[scaledMousePos.y * worldSize.width + scaledMousePos.x] = true;
 			pixelMode.PixelClip(scaledMousePos.x, scaledMousePos.y, ALIVE_COLOR);
 		}
 
+		// Remove life from the world
 		if (geMouse.WasButtonReleased(geMOUSE_RIGHT))
 		{
 			oldWorld[scaledMousePos.y * worldSize.width + scaledMousePos.x] = false;
@@ -230,36 +243,29 @@ public:
 
 		pixelMode.Render();
 
-		spriteBatch.Begin();
-		if (running)
+		if (!hideText)
 		{
-			spriteBatch.DrawString(spriteFont, "Running : True", 0, 0, game::Colors::White, 2.0f);
+			spriteBatch.Begin();
+			if (running)
+			{
+				spriteBatch.DrawString(spriteFont, "Running : True", 0, 0, game::Colors::White, 2.0f);
+			}
+			else
+			{
+				spriteBatch.DrawString(spriteFont, "Running : False", 0, 0, game::Colors::White, 2.0f);
+			}
+			spriteBatch.DrawString(spriteFont, "Tick Time : " + std::to_string((uint32_t)tickSpeed) + "ms", 0, 40, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "FPS : " + std::to_string(geGetFramesPerSecond()), 0, 80, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "Controls : ", 0, 120, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  Left Mouse : Add life", 0, 160, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  Right Mouse : Remove life", 0, 200, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  Space : Start/Stop simulation", 0, 240, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  Comma/Period : Change tick time", 0, 280, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  C : Clear world", 0, 320, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  F11 : Toggle fullscreen ", 0, 360, game::Colors::White, 2.0f);
+			spriteBatch.DrawString(spriteFont, "  F1  : Toggle text", 0, 400, game::Colors::White, 2.0f);
+			spriteBatch.End();
 		}
-		else
-		{
-			spriteBatch.DrawString(spriteFont, "Running : False", 0, 0, game::Colors::White, 2.0f);
-		}
-		spriteBatch.DrawString(spriteFont, "Tick Time : " + std::to_string((uint32_t)tickSpeed) + "ms", 0, 40, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "FPS : " + std::to_string(geGetFramesPerSecond()), 0, 80, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "Controls : ", 0, 120, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "  Left Mouse : Add life", 0, 160, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "  Right Mouse : Remove life", 0, 200, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "  Space : Start/Stop simulation", 0, 240, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "  Comma/Period : Change tick rate", 0, 280, game::Colors::White, 2.0f);
-		spriteBatch.End();
-	}
-
-	// Sets up API stuff
-	void Setup() const
-	{
-#if defined (GAME_OPENGL)
-		if (geIsUsing(GAME_OPENGL))
-		{
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glEnable(GL_BLEND);
-			glEnable(GL_CULL_FACE);
-		}
-#endif
 	}
 };
 

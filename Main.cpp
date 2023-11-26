@@ -50,12 +50,6 @@ public:
 		oldWorld = new bool[(size_t)worldSize.width * (size_t)worldSize.height];
 		ClearWorld();
 
-		// Needed by spritebatch
-		// will move to spriteBatch begin and restore what
-		// was there in end.
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-
 		// Setup pixel mode
 		if (!pixelMode.Initialize(worldSize))
 		{

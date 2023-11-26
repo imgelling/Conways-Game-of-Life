@@ -1,6 +1,3 @@
-//#define GAME_USE_DEDICATED_GPU
-#define GAME_SUPPORT_OPENGL
-
 #include "Game.h"
 
 constexpr uint32_t MAX_UPDATES = 0;
@@ -33,37 +30,12 @@ public:
 		tickSpeed = 100.0f;
 	}
 
-	void HandleWindowSizeChange() override
-	{
-		if (geIsMinimized)
-		{
-			geSetGameLocks(MIN_FRAMES, MIN_UPDATES);
-		}
-		else
-		{
-			geSetGameLocks(MAX_FRAMES, MAX_UPDATES);
-		}
-	}
-
 	void Initialize()
 	{
 		game::Attributes attributes;
 
-		// Enable run-time memory check for debug builds.
-#if defined(DEBUG) | defined(_DEBUG)
-		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-		//_CrtSetBreakAlloc(613);
-#endif
-
 		attributes.WindowTitle = "Conway's Game of Life";
-		attributes.GameVersion = "1.00";
-		attributes.FrameLock = MAX_FRAMES;
-		attributes.UpdateLock = MAX_UPDATES;
-		attributes.VsyncOn = false;
-		attributes.DebugMode = false;
-		//attributes.MultiSamples = 8; // Needed for GL, check that
-		attributes.RenderingAPI = game::RenderAPI::OpenGL;
-
+		attributes.VsyncOn = true;
 		geSetAttributes(attributes);
 
 		worldSize.width = 50;
@@ -269,7 +241,11 @@ public:
 		}
 		spriteBatch.DrawString(spriteFont, "Tick Time : " + std::to_string((uint32_t)tickSpeed) + "ms", 0, 40, game::Colors::White, 2.0f);
 		spriteBatch.DrawString(spriteFont, "FPS : " + std::to_string(geGetFramesPerSecond()), 0, 80, game::Colors::White, 2.0f);
-		spriteBatch.DrawString(spriteFont, "UPS : " + std::to_string(geGetUpdatesPerSecond()), 0, 120, game::Colors::White, 2.0f);
+		spriteBatch.DrawString(spriteFont, "Controls : ", 0, 120, game::Colors::White, 2.0f);
+		spriteBatch.DrawString(spriteFont, "  Left Mouse : Add life", 0, 160, game::Colors::White, 2.0f);
+		spriteBatch.DrawString(spriteFont, "  Right Mouse : Remove life", 0, 200, game::Colors::White, 2.0f);
+		spriteBatch.DrawString(spriteFont, "  Space : Start/Stop simulation", 0, 240, game::Colors::White, 2.0f);
+		spriteBatch.DrawString(spriteFont, "  Comma/Period : Change tick rate", 0, 280, game::Colors::White, 2.0f);
 		spriteBatch.End();
 	}
 

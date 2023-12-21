@@ -260,14 +260,14 @@ public:
 		
 
 		// Add life to the world
-		if (geMouse.IsButtonHeld(geMOUSE_LEFT))
+		if (geMouse.IsButtonHeld(geM_LEFT))
 		{
 			oldWorld[scaledMousePos.y * worldSize.width + scaledMousePos.x] = true;
 			pixelMode.PixelClip(scaledMousePos.x, scaledMousePos.y, ALIVE_COLOR);
 		}
 
 		// Remove life from the world
-		if (geMouse.WasButtonReleased(geMOUSE_RIGHT))
+		if (geMouse.WasButtonReleased(geM_RIGHT))
 		{
 			oldWorld[scaledMousePos.y * worldSize.width + scaledMousePos.x] = false;
 			pixelMode.PixelClip(scaledMousePos.x, scaledMousePos.y, DEAD_COLOR);
